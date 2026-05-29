@@ -12,8 +12,6 @@ export const serverEnv = {
   lineShopOwnerUserId: () => required("LINE_SHOP_OWNER_USER_ID"),
   stripeSecretKey: () => required("STRIPE_SECRET_KEY"),
   stripeWebhookSecret: () => required("STRIPE_WEBHOOK_SECRET"),
-  ameliaApiBase: () => required("AMELIA_API_BASE"),
-  ameliaApiKey: () => required("AMELIA_API_KEY"),
   depositAmountJpy: () => Number(process.env.DEPOSIT_AMOUNT_JPY ?? "2000"),
   siteUrl: () => required("NEXT_PUBLIC_SITE_URL"),
 };

@@ -10,8 +10,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Stripe Webhook: payment 完了で Amelia の予約を approved に変更し、
- * 店舗オーナー & お客様へ LINE 通知を push する。
+ * ⚪ デモ版 Stripe Webhook: payment 完了で LINE 通知を push する。
+ * 本番テンプレでは Amelia の予約を approved に変更する処理も入る。
  *
  * セキュリティ：
  * - Stripe-Signature を必ず HMAC 検証（偽造 webhook を拒否）
@@ -55,8 +55,7 @@ export async function POST(req: Request) {
   try {
     await confirmBooking(bookingId);
   } catch {
-    // Amelia 一時エラーの可能性 → 5xx を返して Stripe にリトライさせる
-    return NextResponse.json({ error: "amelia retry" }, { status: 503 });
+    return NextResponse.json({ error: "retry" }, { status: 503 });
   }
 
   // LINE 通知は best-effort。失敗してもリトライ不要（予約自体は確定済み）

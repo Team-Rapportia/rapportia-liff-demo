@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     );
   }
 
-  // 4. Amelia へ仮予約（pending）
+  // 4. 仮予約 ID 発行（デモではダミー / 本番テンプレでは Amelia へ pending POST）
   let bookingId: string;
   try {
     const result = await createPendingBooking({
@@ -96,7 +96,7 @@ export async function POST(req: Request) {
           },
         },
       ],
-      // 個人情報は metadata に最小限のみ。氏名・電話は Amelia 側に保存済みなので冪等性キーとして booking ID を持つ
+      // 個人情報は metadata に最小限のみ
       metadata: {
         bookingId,
         lineUserId,
