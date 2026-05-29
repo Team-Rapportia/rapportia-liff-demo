@@ -32,24 +32,31 @@ export function LiffGate({ liffId, products }: Props) {
         return;
       }
 
+      let step = "import";
       try {
         const liff = (await import("@line/liff")).default;
+
+        step = "init";
         await liff.init({ liffId });
 
+        step = "isLoggedIn";
         if (!liff.isLoggedIn()) {
+          step = "login";
           liff.login();
           return;
         }
 
+        step = "getIDToken";
         const idToken = liff.getIDToken();
         if (!idToken) {
           setState({
             kind: "error",
-            message: "LINE 認証情報を取得できませんでした。",
+            message: `[debug] idToken=null (step=${step}, isInClient=${liff.isInClient()})`,
           });
           return;
         }
 
+        step = "getProfile";
         const profile = await liff.getProfile();
         if (!cancelled) {
           setState({
@@ -58,12 +65,12 @@ export function LiffGate({ liffId, products }: Props) {
             profile: { displayName: profile.displayName },
           });
         }
-      } catch {
+      } catch (e) {
         if (!cancelled) {
+          const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
           setState({
             kind: "error",
-            message:
-              "LINE 連携に失敗しました。LINE アプリから開き直してください。",
+            message: `[debug step=${step}] ${msg}`,
           });
         }
       }
