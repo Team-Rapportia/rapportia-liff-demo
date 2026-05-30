@@ -11,6 +11,7 @@ type Props = {
 
 export function ReservationForm({ products, liffIdToken, defaultName }: Props) {
   const [productId, setProductId] = useState(products[0]?.id ?? "");
+  const [quantity, setQuantity] = useState(1);
   const [pickupDate, setPickupDate] = useState("");
   const [pickupTimeSlot, setPickupTimeSlot] = useState<"am" | "pm">("am");
   const [customerName, setCustomerName] = useState(defaultName);
@@ -38,6 +39,7 @@ export function ReservationForm({ products, liffIdToken, defaultName }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           productId,
+          quantity,
           pickupDate,
           pickupTimeSlot,
           customerName,
@@ -91,6 +93,26 @@ export function ReservationForm({ products, liffIdToken, defaultName }: Props) {
               </div>
               <p className="text-sm text-gray-600 mt-1">{p.description}</p>
             </label>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <label className="block text-sm font-medium mb-2">数量</label>
+        <div className="grid grid-cols-5 gap-2">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              type="button"
+              key={n}
+              onClick={() => setQuantity(n)}
+              className={`py-3 rounded-lg border transition ${
+                quantity === n
+                  ? "bg-primary text-white border-primary"
+                  : "bg-white border-gray-300"
+              }`}
+            >
+              {n}個
+            </button>
           ))}
         </div>
       </section>
@@ -178,7 +200,9 @@ export function ReservationForm({ products, liffIdToken, defaultName }: Props) {
         >
           {submitting
             ? "決済画面へ移動中..."
-            : `Stripe で予約金を支払う（${selected ? `¥${selected.priceJpy.toLocaleString()}の` : ""}ご予約）`}
+            : selected
+              ? `Stripe で予約金を支払う（小計 ¥${(selected.priceJpy * quantity).toLocaleString()}）`
+              : "Stripe で予約金を支払う"}
         </button>
       </div>
     </form>

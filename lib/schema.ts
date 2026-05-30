@@ -3,6 +3,7 @@ import { z } from "zod";
 // クライアント → /api/checkout への入力
 export const checkoutRequestSchema = z.object({
   productId: z.string().min(1).max(64),
+  quantity: z.number().int().min(1).max(10),
   pickupDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD 形式で指定"),

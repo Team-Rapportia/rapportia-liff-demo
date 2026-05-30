@@ -90,17 +90,25 @@ export async function POST(req: Request) {
             currency: "jpy",
             unit_amount: serverEnv.depositAmountJpy(),
             product_data: {
-              name: `予約金 / ${product.name}`,
+              name: `予約金 / ${product.name} × ${input.quantity}個`,
               description: `お受取日: ${input.pickupDate} / ${input.pickupTimeSlot === "am" ? "午前" : "午後"}`,
             },
           },
         },
       ],
-      // 個人情報は metadata に最小限のみ
+      // metadata に注文詳細を載せる（webhook で予約完了通知を構築するため）
+      // 個人情報は最小限・店舗オーナーへの通知に必要な値のみ
       metadata: {
         bookingId,
         lineUserId,
         productId: product.id,
+        productName: product.name,
+        productPriceJpy: String(product.priceJpy),
+        quantity: String(input.quantity),
+        pickupDate: input.pickupDate,
+        pickupTimeSlot: input.pickupTimeSlot,
+        customerName: input.customerName,
+        customerNote: input.customerNote ?? "",
       },
       success_url: `${serverEnv.siteUrl()}/thanks?bid=${encodeURIComponent(bookingId)}`,
       cancel_url: `${serverEnv.siteUrl()}/cancel?bid=${encodeURIComponent(bookingId)}`,
