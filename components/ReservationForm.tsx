@@ -18,6 +18,11 @@ export function ReservationForm({ products, liffIdToken, defaultName }: Props) {
   const [customerNote, setCustomerNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [attempted, setAttempted] = useState(false);
+
+  // 必須項目のエラー判定（送信を試みたあとに有効化）
+  const dateError = attempted && !pickupDate;
+  const nameError = attempted && !customerName;
 
   const selected = products.find((p) => p.id === productId);
 
@@ -30,6 +35,13 @@ export function ReservationForm({ products, liffIdToken, defaultName }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setAttempted(true);
+
+    if (!pickupDate || !customerName) {
+      setError("赤枠の項目を入力してください。");
+      return;
+    }
+
     setError(null);
     setSubmitting(true);
 
@@ -120,6 +132,7 @@ export function ReservationForm({ products, liffIdToken, defaultName }: Props) {
       <section>
         <label htmlFor="pickup-date" className="block text-sm font-medium mb-2">
           お受取日（3日以上先）
+          {dateError && <span className="text-accent ml-2 text-xs">※ 必須項目です</span>}
         </label>
         <input
           id="pickup-date"
@@ -128,7 +141,12 @@ export function ReservationForm({ products, liffIdToken, defaultName }: Props) {
           min={minDate}
           value={pickupDate}
           onChange={(e) => setPickupDate(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg p-3"
+          aria-invalid={dateError}
+          className={`w-full border rounded-lg p-3 transition ${
+            dateError
+              ? "border-accent border-2 bg-red-50"
+              : "border-gray-300"
+          }`}
         />
       </section>
 
@@ -155,6 +173,7 @@ export function ReservationForm({ products, liffIdToken, defaultName }: Props) {
       <section>
         <label htmlFor="customer-name" className="block text-sm font-medium mb-2">
           お名前
+          {nameError && <span className="text-accent ml-2 text-xs">※ 必須項目です</span>}
         </label>
         <input
           id="customer-name"
@@ -163,7 +182,12 @@ export function ReservationForm({ products, liffIdToken, defaultName }: Props) {
           maxLength={40}
           value={customerName}
           onChange={(e) => setCustomerName(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg p-3"
+          aria-invalid={nameError}
+          className={`w-full border rounded-lg p-3 transition ${
+            nameError
+              ? "border-accent border-2 bg-red-50"
+              : "border-gray-300"
+          }`}
         />
       </section>
 
@@ -195,7 +219,7 @@ export function ReservationForm({ products, liffIdToken, defaultName }: Props) {
         </p>
         <button
           type="submit"
-          disabled={submitting || !pickupDate || !customerName}
+          disabled={submitting}
           className="w-full bg-primary-dark text-white font-medium py-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {submitting
