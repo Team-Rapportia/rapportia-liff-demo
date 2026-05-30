@@ -180,7 +180,13 @@ export async function POST(req: Request) {
 
   // LINE 通知は best-effort（失敗してもリトライ不要、予約自体は確定済み）
   await pushLineMessage(reservation.lineUserId, customerMsg).catch(() => {});
-  await pushLineMessage(serverEnv.lineShopOwnerUserId(), shopMsg).catch(() => {});
+
+  // お客様と店舗オーナーが同一ユーザーの場合は店舗通知をスキップ（同じ受信箱への重複送信を防ぐ）
+  // 通常はテスト環境（自分が両方）でのみ発生する
+  const shopOwnerId = serverEnv.lineShopOwnerUserId();
+  if (shopOwnerId !== reservation.lineUserId) {
+    await pushLineMessage(shopOwnerId, shopMsg).catch(() => {});
+  }
 
   return NextResponse.json({ received: true });
 }
