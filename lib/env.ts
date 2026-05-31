@@ -14,6 +14,8 @@ export const serverEnv = {
   stripeWebhookSecret: () => required("STRIPE_WEBHOOK_SECRET"),
   depositAmountJpy: () => Number(process.env.DEPOSIT_AMOUNT_JPY ?? "2000"),
   siteUrl: () => required("NEXT_PUBLIC_SITE_URL"),
+  // 店主用管理画面の合言葉。未設定でもデモがローカルで動くようデフォルトを用意。
+  adminPasscode: () => process.env.ADMIN_PASSCODE ?? "cake-demo",
 };
 
 export const clientEnv = {

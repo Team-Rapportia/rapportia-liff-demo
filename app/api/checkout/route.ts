@@ -62,6 +62,9 @@ export async function POST(req: Request) {
   try {
     const result = await createPendingBooking({
       serviceId: product.id,
+      productName: product.name,
+      productPriceJpy: product.priceJpy,
+      quantity: input.quantity,
       pickupDate: input.pickupDate,
       pickupTimeSlot: input.pickupTimeSlot,
       customerName: input.customerName,

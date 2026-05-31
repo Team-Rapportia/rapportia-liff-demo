@@ -8,6 +8,24 @@
 
 ---
 
+## 店主向け予約管理画面 `/admin`（2026-05-31 追加）
+
+「LINE で予約 → 店主のスマホ管理画面に即反映 → ワンタップで LINE リマインド送信」を
+商談で実演するための、店主向け激シンプル管理画面。
+
+- URL: `/admin`（未ログインは `/admin/login` へ。`robots: noindex`）
+- ログイン: 合言葉（`ADMIN_PASSCODE`、既定 `cake-demo`）。本番は店主の LINE-ID 許可リストにする想定
+- 予約の保存先: Upstash / Vercel KV（無ければプロセス内メモリ）= Amelia の MySQL の無料代役
+- **ローカルは何も設定せず動く**（メモリ保存・擬似 LINE 送信）。「スマホ→PC 反映」を本番デモで
+  見せる時だけ Vercel に `KV_REST_API_URL` / `KV_REST_API_TOKEN` を設定（👤 1回）
+- 設計判断の詳細: [team-rapportia/strategy/11_予約管理と店主ダッシュボード.md](https://github.com/Team-Rapportia/team-rapportia/blob/main/strategy/11_予約管理と店主ダッシュボード.md)
+
+> なぜ Amelia 風テーブルにしないか: wp-admin 風の複雑な画面はペルソナのペイン C-14（管理画面が
+> 複雑で諦めた）そのもの。当社の強み（簡単・LINE・脱HotPepper）と逆の印象を与えるため、
+> 店主のスマホ画面を主役にしている。
+
+---
+
 ## デモと本番テンプレの違い
 
 | 項目 | ⚪ rapportia-liff-demo（本リポ） | 🟢 rapportia-liff（本番テンプレ） |
