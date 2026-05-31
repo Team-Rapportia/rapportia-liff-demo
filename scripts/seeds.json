@@ -1,0 +1,62 @@
+[
+  {
+    "bookingId": "demo_shortcake15_seed001",
+    "lineUserId": "Udemo0001",
+    "customerName": "鈴木 さおり",
+    "productId": "shortcake-15",
+    "productName": "いちごのショートケーキ（15cm）",
+    "productPriceJpy": 4800,
+    "quantity": 1,
+    "pickupTimeSlot": "am",
+    "customerNote": "メッセージプレートに「Happy Birthday」と入れてください",
+    "depositJpy": 2000,
+    "status": "confirmed",
+    "daysFromNow": 2,
+    "createdHoursAgo": 24
+  },
+  {
+    "bookingId": "demo_chocolat15_seed002",
+    "lineUserId": "Udemo0002",
+    "customerName": "山田 浩二",
+    "productId": "chocolat-15",
+    "productName": "ガトーショコラ（15cm）",
+    "productPriceJpy": 4600,
+    "quantity": 1,
+    "pickupTimeSlot": "pm",
+    "customerNote": "",
+    "depositJpy": 2000,
+    "status": "confirmed",
+    "daysFromNow": 3,
+    "createdHoursAgo": 3
+  },
+  {
+    "bookingId": "demo_montblanc15_seed003",
+    "lineUserId": "Udemo0003",
+    "customerName": "佐藤 美咏",
+    "productId": "montblanc-15",
+    "productName": "モンブラン（15cm）",
+    "productPriceJpy": 5200,
+    "quantity": 2,
+    "pickupTimeSlot": "am",
+    "customerNote": "2つとも別笱でお願いします",
+    "depositJpy": 2000,
+    "status": "confirmed",
+    "daysFromNow": 5,
+    "createdHoursAgo": 1
+  },
+  {
+    "bookingId": "demo_shortcake18_seed004",
+    "lineUserId": "Udemo0004",
+    "customerName": "高田 優斗",
+    "productId": "shortcake-18",
+    "productName": "いちごのショートケーキ（18cm）",
+    "productPriceJpy": 6800,
+    "quantity": 1,
+    "pickupTimeSlot": "pm",
+    "customerNote": "",
+    "depositJpy": 2000,
+    "status": "pending",
+    "daysFromNow": 1,
+    "createdHoursAgo": 0
+  }
+]
