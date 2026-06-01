@@ -2,7 +2,7 @@
  * ⚪ デモ版: Amelia は使用しない（有料 + WP 環境が必要なため）。
  * 本番テンプレ (rapportia-liff) では実際の Amelia REST API を叩く。
  *
- * このデモでは Amelia の代役として自前ストア (lib/store: KV / メモリ) に
+ * このデモでは Amelia の代役として自前ストア (lib/store: Supabase / メモリ) に
  * 予約を保存する。これにより「LINE で予約 → 店主のスマホ管理画面に反映」を
  * 商談で実演できる。
  *   createPendingBooking … 仮予約(pending)を保存   ← 本番は Amelia へ pending POST

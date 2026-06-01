@@ -15,10 +15,12 @@
 
 - URL: `/admin`（未ログインは `/admin/login` へ。`robots: noindex`）
 - ログイン: 合言葉（`ADMIN_PASSCODE`、既定 `cake-demo`）。本番は店主の LINE-ID 許可リストにする想定
-- 予約の保存先: Upstash / Vercel KV（無ければプロセス内メモリ）= Amelia の MySQL の無料代役
+- 予約の保存先: **Supabase (Postgres)**（無ければプロセス内メモリ）= Amelia の MySQL の代役
 - **ローカルは何も設定せず動く**（メモリ保存・擬似 LINE 送信）。「スマホ→PC 反映」を本番デモで
-  見せる時だけ Vercel に `KV_REST_API_URL` / `KV_REST_API_TOKEN` を設定（👤 1回）
-- 設計判断の詳細: [team-rapportia/strategy/11_予約管理と店主ダッシュボード.md](https://github.com/Team-Rapportia/team-rapportia/blob/main/strategy/11_予約管理と店主ダッシュボード.md)
+  見せる時だけ Vercel に `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` を設定（👤 1回）
+- スキーマは `supabase/migrations/0001_init_reservations.sql`、ダミー投入は `scripts/seed-supabase.ps1`
+- 無料プロジェクトは 7 日無アクセスで pause するため、`/api/keep-alive` を日次 cron（`vercel.json`）で起こし続ける
+- 設計判断の詳細: [strategy/11_予約管理と店主ダッシュボード.md](https://github.com/Team-Rapportia/team-rapportia/blob/main/strategy/11_予約管理と店主ダッシュボード.md) / [strategy/13_予約バックエンドの選定（Supabase決定）.md](https://github.com/Team-Rapportia/team-rapportia/blob/main/strategy/13_予約バックエンドの選定（Supabase決定）.md)
 
 > なぜ Amelia 風テーブルにしないか: wp-admin 風の複雑な画面はペルソナのペイン C-14（管理画面が
 > 複雑で諦めた）そのもの。当社の強み（簡単・LINE・脱HotPepper）と逆の印象を与えるため、

@@ -7,7 +7,7 @@ import { formatDate, formatTimeSlot, formatJpy } from "@/lib/format";
 
 type Props = {
   reservations: Reservation[];
-  storage: "kv" | "memory";
+  storage: "supabase" | "memory";
 };
 
 type Filter = "all" | ReservationStatus;
@@ -85,7 +85,7 @@ export function AdminReservationList({ reservations, storage }: Props) {
       </header>
 
       <p className="text-[11px] text-gray-400 mb-4">
-        保存先: {storage === "kv" ? "KV（共有・別デバイスでも反映）" : "メモリ（このサーバー内のみ・開発用）"}
+        保存先: {storage === "supabase" ? "Supabase（共有・別デバイスでも反映）" : "メモリ（このサーバー内のみ・開発用）"}
       </p>
 
       {/* フィルタタブ */}
