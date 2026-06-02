@@ -4,7 +4,7 @@
 
 > ⚠️ **このリポジトリは凍結デモです**。新機能・バグ修正は本番テンプレ [`rapportia-liff`](https://github.com/Team-Rapportia/rapportia-liff) で行います。
 >
-> このリポは「商談で動くものを見せる」目的のみ。Amelia (有料プラグイン) を使わず、ダミー予約 ID で Stripe 決済までの導線だけを動かします。
+> このリポは「商談で動くものを見せる」目的のみ。Amelia (有料プラグイン) を使わず、**Supabase（無ければメモリ）** に予約を保存して Stripe 決済までの導線と店主管理画面を動かします（予約バックエンドは [Supabase に完全移行決定](https://github.com/Team-Rapportia/team-rapportia/blob/main/strategy/13_予約バックエンドの選定（Supabase決定）.md)）。
 
 ---
 
@@ -14,7 +14,7 @@
 商談で実演するための、店主向け激シンプル管理画面。
 
 - URL: `/admin`（未ログインは `/admin/login` へ。`robots: noindex`）
-- ログイン: 合言葉（`ADMIN_PASSCODE`、既定 `cake-demo`）。本番は店主の LINE-ID 許可リストにする想定
+- ログイン: **LINE ログイン + LINE ユーザーID 許可リスト**（`ADMIN_LINE_USER_IDS`・カンマ区切りで複数管理者対応、合言葉は廃止）。未登録者は `/admin/login` で本人の LINE UID が表示され、それを許可リストに追記して登録。Cookie は `ADMIN_SESSION_SECRET` で HMAC 署名
 - 予約の保存先: **Supabase (Postgres)**（無ければプロセス内メモリ）= Amelia の MySQL の代役
 - **ローカルは何も設定せず動く**（メモリ保存・擬似 LINE 送信）。「スマホ→PC 反映」を本番デモで
   見せる時だけ Vercel に `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` を設定（👤 1回）
@@ -32,11 +32,11 @@
 
 | 項目 | ⚪ rapportia-liff-demo（本リポ） | 🟢 rapportia-liff（本番テンプレ） |
 |---|---|---|
-| 予約データ保存 | ❌ なし（ダミー bookingId 発行） | ✅ Amelia Pro へ POST |
+| 予約データ保存 | ✅ **Supabase (Postgres)** / メモリ（採用バックエンド） | Amelia へ POST（将来オプション） |
 | Stripe 決済 | ✅ テストモード | ✅ 本番モード |
 | LINE 通知 | ✅ お客様 + 店舗 | ✅ お客様 + 店舗 |
 | WP REST API 連携 | ❌ | ✅ |
-| 月額コスト | ¥0 | Amelia Pro $329/年〜 + ConoHa WING ¥1,210/月 |
+| 月額コスト | dev=¥0 / 実運用=Supabase Pro $25/月 | Amelia Elite（API用 $798/年〜・要確認）+ ConoHa WING ¥1,210/月 |
 | 用途 | 商談デモ | 顧客環境にデプロイ |
 | 更新方針 | **凍結**（必要時のみ） | 継続進化 |
 
@@ -56,7 +56,7 @@ LINE 公式アカウント
    ↓ リッチメニュータップ
 LIFFアプリ (Vercel) ← このリポ
    ↓ LIFF ID Token 検証 (LINE Verify API)
-   ↓ ダミー bookingId 発行（Amelia の代わり）
+   ↓ Supabase (Postgres) に予約保存（無ければメモリ。Amelia の代役）
    ↓
 Stripe Checkout (hosted, テストモード)
    ↓ Webhook
@@ -69,7 +69,7 @@ LINE Messaging API
 
 | 項目 | 対応 |
 |---|---|
-| 個人情報の自社保管 | ❌ しない |
+| 個人情報の自社保管 | 受託者(processor)として Supabase に保持（東京リージョン・RLS・暗号化）。カード情報は非保管 |
 | 本人確認 | LIFF ID Token を LINE で検証 |
 | カード情報 | Stripe Checkout (hosted)。PCI DSS SAQ-A |
 | Webhook 偽造防止 | `Stripe-Signature` の HMAC 検証 |

@@ -34,6 +34,7 @@ function formatCreatedAt(iso: string): string {
 export function AdminReservationList({ reservations, storage }: Props) {
   const router = useRouter();
   const [filter, setFilter] = useState<Filter>("all");
+  const [clearing, setClearing] = useState(false);
 
   const counts = {
     all: reservations.length,
@@ -50,6 +51,25 @@ export function AdminReservationList({ reservations, storage }: Props) {
   async function logout() {
     await fetch("/api/admin/login", { method: "DELETE" }).catch(() => {});
     window.location.href = "/admin/login";
+  }
+
+  async function clearAll() {
+    if (
+      !window.confirm(
+        `このデモの予約 ${counts.all} 件をすべて削除します。\n商談前のリセット用です。元に戻せません。よろしいですか？`
+      )
+    ) {
+      return;
+    }
+    setClearing(true);
+    try {
+      const res = await fetch("/api/admin/reservations", { method: "DELETE" });
+      if (res.ok) {
+        router.refresh();
+      }
+    } finally {
+      setClearing(false);
+    }
   }
 
   const tabs: { key: Filter; label: string }[] = [
@@ -84,9 +104,18 @@ export function AdminReservationList({ reservations, storage }: Props) {
         </div>
       </header>
 
-      <p className="text-[11px] text-gray-400 mb-4">
-        保存先: {storage === "supabase" ? "Supabase（共有・別デバイスでも反映）" : "メモリ（このサーバー内のみ・開発用）"}
-      </p>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <p className="text-[11px] text-gray-400">
+          保存先: {storage === "supabase" ? "Supabase（共有・別デバイスでも反映）" : "メモリ（このサーバー内のみ・開発用）"}
+        </p>
+        <button
+          onClick={clearAll}
+          disabled={clearing || counts.all === 0}
+          className="whitespace-nowrap text-[11px] text-accent border border-accent/40 rounded-full px-3 py-1 active:bg-red-50 disabled:opacity-30"
+        >
+          {clearing ? "消去中..." : "予約を全消去"}
+        </button>
+      </div>
 
       {/* フィルタタブ */}
       <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1">

@@ -1,5 +1,7 @@
 # デプロイ手順（Step 2〜5）
 
+> ⚠️ **2026-06-01 更新**: このデモ（`rapportia-liff-demo`）の予約保存先は **Supabase（無ければメモリ）** に変更済み（[Supabase 完全移行決定](https://github.com/Team-Rapportia/team-rapportia/blob/main/strategy/13_予約バックエンドの選定（Supabase決定）.md)）。本ガイドの **Step 4「ConoHa WING + Amelia」は本番テンプレ `rapportia-liff` 用**で、デモのデプロイには不要（読み飛ばし可）。Supabase の設定は README とマイグレーション（`supabase/migrations/`）を参照。
+
 `npm install` が終わった後にやる、各外部サービスのセットアップ手順。
 **LINE → Stripe → Amelia → Vercel** の順で進めるのが最短。
 
@@ -31,7 +33,7 @@
    - サイズ: **Full**
    - エンドポイントURL: 仮で `https://example.com/` （Vercel デプロイ後に書き換え）
    - Scope: **profile** と **openid** をオン
-   - ボットリンク機能: Off
+   - ボットリンク機能（友だち追加オプション）: **On (Aggressive)** ← push 通知（予約完了メッセージ）を確実に届けるため
 3. 作成すると「LIFF ID」（例: `1234567890-AbCdEfGh`）が表示 → **メモ → `NEXT_PUBLIC_LIFF_ID`**
 
 ### 2-D. Messaging API チャネル作成（通知送信用）

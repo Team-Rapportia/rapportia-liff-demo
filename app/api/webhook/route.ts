@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { confirmBooking } from "@/lib/amelia";
 import { pushLineMessage } from "@/lib/line";
+import { adminUserIds } from "@/lib/admin-auth";
 import { serverEnv } from "@/lib/env";
 import { findProduct } from "@/lib/products";
 import { formatDate, formatTimeSlot, formatJpy } from "@/lib/format";
@@ -179,13 +180,13 @@ export async function POST(req: Request) {
   const shopMsg = buildShopMessage(reservation, depositJpy);
 
   // LINE 通知は best-effort（失敗してもリトライ不要、予約自体は確定済み）
+  // お客様向け（予約確定）と店舗向け（新規予約）を常に両方送る。
+  // ソロデモ（自分が客と店主を兼ねる）でも両メッセージを見せられるよう、同一ユーザー判定はしない。
   await pushLineMessage(reservation.lineUserId, customerMsg).catch(() => {});
 
-  // お客様と店舗オーナーが同一ユーザーの場合は店舗通知をスキップ（同じ受信箱への重複送信を防ぐ）
-  // 通常はテスト環境（自分が両方）でのみ発生する
-  const shopOwnerId = serverEnv.lineShopOwnerUserId();
-  if (shopOwnerId !== reservation.lineUserId) {
-    await pushLineMessage(shopOwnerId, shopMsg).catch(() => {});
+  // 店舗通知は登録済み管理者全員へ配信（複数営業/スタッフ前提）。
+  for (const adminId of adminUserIds()) {
+    await pushLineMessage(adminId, shopMsg).catch(() => {});
   }
 
   return NextResponse.json({ received: true });

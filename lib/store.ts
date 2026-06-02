@@ -190,6 +190,26 @@ export async function updateReservation(
 }
 
 /**
+ * このデモ（DEMO_ID）の予約をすべて削除する。
+ * 商談ごとに管理画面から実演データをリセットする用途（他デモの行には触れない）。
+ * @returns 削除した件数
+ */
+export async function clearReservations(): Promise<number> {
+  if (supabaseConfigured()) {
+    const { data, error } = await sb()
+      .from(TABLE)
+      .delete()
+      .eq("demo_id", DEMO_ID)
+      .select("booking_id");
+    if (error) throw new Error(`Supabase delete failed: ${error.message}`);
+    return (data as { booking_id: string }[] | null)?.length ?? 0;
+  }
+  const n = memory.size;
+  memory.clear();
+  return n;
+}
+
+/**
  * 死活確認（keep-alive 用）。Supabase に軽いクエリを 1 回投げて起こし続ける。
  * 無料プロジェクトの「7日無アクセスで pause」を防ぐ。DB に実際に触れる必要がある。
  */
