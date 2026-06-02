@@ -85,7 +85,10 @@ export async function POST(req: Request) {
     const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      payment_method_types: ["card"],
+      // 即時決済のみ採用（コンビニ/銀行振込=非同期、WeChat/Alipay=ニッチ は除外）。
+      // Apple Pay / Google Pay は "card" 有効時に対応端末で自動表示されるため列挙不要。
+      // ※ PayPay は Stripe の対応決済手段に含まれないため不可（別PSP/PayPay APIが必要）。
+      payment_method_types: ["card", "link", "amazon_pay"],
       line_items: [
         {
           quantity: 1,
