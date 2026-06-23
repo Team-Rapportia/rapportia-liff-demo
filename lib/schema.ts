@@ -11,6 +11,8 @@ export const checkoutRequestSchema = z.object({
   customerName: z.string().min(1).max(40),
   customerNote: z.string().max(500).optional(),
   liffIdToken: z.string().min(10),
+  // 流入元（攻めPUSHの効果証明）。クライアント送信値はサーバーで sanitizeSource により検証する。
+  source: z.string().max(64).optional(),
 });
 
 export type CheckoutRequest = z.infer<typeof checkoutRequestSchema>;

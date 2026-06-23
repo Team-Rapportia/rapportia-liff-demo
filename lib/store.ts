@@ -33,6 +33,7 @@ export type Reservation = {
   customerNote: string;
   depositJpy: number;
   status: ReservationStatus;
+  source: string; // 流入元（'organic' / rebook_* / bday_* / anniv_* / season_*）。strategy/22
   createdAt: string; // ISO8601
   confirmedAt?: string;
   remindedAt?: string;
@@ -79,6 +80,7 @@ type Row = {
   customer_note: string;
   deposit_jpy: number;
   status: ReservationStatus;
+  source: string;
   created_at: string;
   confirmed_at: string | null;
   reminded_at: string | null;
@@ -98,6 +100,7 @@ function rowToReservation(r: Row): Reservation {
     customerNote: r.customer_note,
     depositJpy: r.deposit_jpy,
     status: r.status,
+    source: r.source ?? "organic",
     createdAt: r.created_at,
     confirmedAt: r.confirmed_at ?? undefined,
     remindedAt: r.reminded_at ?? undefined,
@@ -119,6 +122,7 @@ function reservationToRow(r: Reservation): Row {
     customer_note: r.customerNote,
     deposit_jpy: r.depositJpy,
     status: r.status,
+    source: r.source ?? "organic",
     created_at: r.createdAt,
     confirmed_at: r.confirmedAt ?? null,
     reminded_at: r.remindedAt ?? null,
@@ -207,6 +211,82 @@ export async function clearReservations(): Promise<number> {
   const n = memory.size;
   memory.clear();
   return n;
+}
+
+// --- 攻めPUSH（オケージョン再来店）用クエリ。strategy/22 ---
+
+function ymd(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * 前年同期再予約の対象 line_user_id を返す。
+ * 「約1年前（±windowDays）に受取があった顧客」を再来店PUSHの対象にする。
+ * - 既存の pickup_date だけで算出（新規データ・フォーム改修は不要）。
+ * - cancelled は除外。重複ユーザーは1件に集約。
+ * - 攻めの本命はオケージョン型（[strategy/22]）。誕生日は別途フォーム収集が必要。
+ */
+export async function findAnniversaryCandidates(opts?: {
+  windowDays?: number;
+  refDate?: Date;
+}): Promise<string[]> {
+  const ref = opts?.refDate ?? new Date();
+  const w = opts?.windowDays ?? 7;
+
+  const center = new Date(ref);
+  center.setFullYear(center.getFullYear() - 1);
+  const from = new Date(center);
+  from.setDate(from.getDate() - w);
+  const to = new Date(center);
+  to.setDate(to.getDate() + w);
+  const fromS = ymd(from);
+  const toS = ymd(to);
+
+  if (supabaseConfigured()) {
+    const { data, error } = await sb()
+      .from(TABLE)
+      .select("line_user_id")
+      .eq("demo_id", DEMO_ID)
+      .neq("status", "cancelled")
+      .gte("pickup_date", fromS)
+      .lte("pickup_date", toS);
+    if (error) throw new Error(`Supabase candidates failed: ${error.message}`);
+    const ids = (data as { line_user_id: string }[] | null) ?? [];
+    return [...new Set(ids.map((r) => r.line_user_id))];
+  }
+
+  const ids = Array.from(memory.values())
+    .filter(
+      (r) =>
+        r.status !== "cancelled" &&
+        r.pickupDate >= fromS &&
+        r.pickupDate <= toS
+    )
+    .map((r) => r.lineUserId);
+  return [...new Set(ids)];
+}
+
+/**
+ * 流入元（source）別の予約件数・売上を集計する（効果証明レポート）。
+ * 出力は自社運用の内部用途。店主ダッシュボードには常設しない（strategy/22）。
+ */
+export async function reservationStatsBySource(opts?: {
+  since?: string; // ISO8601。createdAt がこれ以降のみ集計
+}): Promise<Record<string, { count: number; salesJpy: number }>> {
+  const all = await listReservations();
+  const since = opts?.since;
+  const stats: Record<string, { count: number; salesJpy: number }> = {};
+
+  for (const r of all) {
+    if (since && r.createdAt < since) continue;
+    if (r.status === "cancelled") continue;
+    const key = r.source || "organic";
+    stats[key] ??= { count: 0, salesJpy: 0 };
+    stats[key].count += 1;
+    stats[key].salesJpy += r.productPriceJpy * r.quantity;
+  }
+
+  return stats;
 }
 
 /**

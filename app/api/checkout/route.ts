@@ -4,6 +4,7 @@ import { verifyLiffIdToken } from "@/lib/line";
 import { createPendingBooking } from "@/lib/amelia";
 import { getStripe } from "@/lib/stripe";
 import { findProduct } from "@/lib/products";
+import { sanitizeSource } from "@/lib/campaign";
 import { serverEnv } from "@/lib/env";
 
 export const runtime = "nodejs";
@@ -20,6 +21,9 @@ export async function POST(req: Request) {
   }
 
   const input = parsed.data;
+
+  // 流入元（攻めPUSHの効果証明）。クライアント送信値は信用せず許可リストで丸める。
+  const source = sanitizeSource(input.source);
 
   // 1. LIFF ID Token を LINE 側で検証（本人確認）
   let lineUserId: string;
@@ -70,6 +74,7 @@ export async function POST(req: Request) {
       customerName: input.customerName,
       customerLineUserId: lineUserId,
       customerNote: input.customerNote,
+      source,
     });
     bookingId = result.bookingId;
   } catch {
@@ -115,6 +120,7 @@ export async function POST(req: Request) {
         pickupTimeSlot: input.pickupTimeSlot,
         customerName: input.customerName,
         customerNote: input.customerNote ?? "",
+        source,
       },
       success_url: `${serverEnv.siteUrl()}/thanks?bid=${encodeURIComponent(bookingId)}`,
       cancel_url: `${serverEnv.siteUrl()}/cancel?bid=${encodeURIComponent(bookingId)}`,

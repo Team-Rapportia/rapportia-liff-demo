@@ -22,6 +22,7 @@ export type AmeliaBookingInput = {
   customerName: string;
   customerLineUserId: string;
   customerNote?: string;
+  source?: string; // 流入元（攻めPUSHの効果証明）。未指定は 'organic'
 };
 
 export type AmeliaBookingResult = {
@@ -49,6 +50,7 @@ export async function createPendingBooking(
     customerNote: input.customerNote ?? "",
     depositJpy: serverEnv.depositAmountJpy(),
     status: "pending",
+    source: input.source ?? "organic",
     createdAt: new Date().toISOString(),
   });
 

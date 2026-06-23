@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Product } from "@/lib/products";
+import { extractCampaign } from "@/lib/campaign";
 
 type Props = {
   products: Product[];
@@ -45,6 +46,12 @@ export function ReservationForm({ products, liffIdToken, defaultName }: Props) {
     setError(null);
     setSubmitting(true);
 
+    // 攻めPUSH のリンク（?camp=...）から来た予約に流入元の印を付ける。
+    // 通常の予約は空 → サーバー側で 'organic' に丸められる。UI には一切影響しない。
+    const source = extractCampaign(
+      typeof window !== "undefined" ? window.location.search : ""
+    );
+
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -57,6 +64,7 @@ export function ReservationForm({ products, liffIdToken, defaultName }: Props) {
           customerName,
           customerNote,
           liffIdToken,
+          source,
         }),
       });
 
