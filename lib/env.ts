@@ -24,6 +24,10 @@ export const serverEnv = {
   // 管理者セッション Cookie の署名鍵。未設定でもローカルデモが動くようデフォルトを用意。
   adminSessionSecret: () =>
     process.env.ADMIN_SESSION_SECRET ?? "rapportia-dev-admin-secret",
+  // 攻めPUSH（オケージョン再来店）の配信を起動する自社専用シークレット。
+  // 店主ではなく「自社」が叩く内部エンドポイント /api/admin/campaign の保護に使う（strategy/22）。
+  // 未設定なら空 → エンドポイントは常に 403（安全側のデフォルト）。
+  campaignTriggerSecret: () => process.env.CAMPAIGN_TRIGGER_SECRET ?? "",
 };
 
 export const clientEnv = {

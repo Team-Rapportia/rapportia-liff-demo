@@ -48,3 +48,37 @@ export async function pushLineMessage(
 
   return { ok: res.ok, status: res.status };
 }
+
+/**
+ * LINE Messaging API multicast で複数ユーザーへ一括 push（攻めPUSH／オケージョン再来店）。
+ * - multicast は 1 リクエスト最大 500 件なのでバッチ分割する。
+ * - multicast も通常 push と同じく通数課金（原価の根拠は strategy/22 を参照）。
+ * - 配信は自社運用（店主ダッシュボードからは呼ばない）。
+ */
+export async function pushLineMulticast(
+  toUserIds: string[],
+  text: string
+): Promise<{ ok: boolean; sent: number }> {
+  let ok = true;
+  let sent = 0;
+
+  for (let i = 0; i < toUserIds.length; i += 500) {
+    const batch = toUserIds.slice(i, i + 500);
+    const res = await fetch("https://api.line.me/v2/bot/message/multicast", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${serverEnv.lineMessagingToken()}`,
+      },
+      body: JSON.stringify({
+        to: batch,
+        messages: [{ type: "text", text }],
+      }),
+    });
+
+    if (res.ok) sent += batch.length;
+    else ok = false;
+  }
+
+  return { ok, sent };
+}
