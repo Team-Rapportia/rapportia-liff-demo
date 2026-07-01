@@ -144,8 +144,22 @@ export async function saveReservation(r: Reservation): Promise<void> {
     const { error } = await sb()
       .from(TABLE)
       .upsert(reservationToRow(r), { onConflict: "booking_id" });
-    if (error) throw new Error(`Supabase upsert failed: ${error.message}`);
+    if (error) {
+      if (error.code === "23505") throw new Error("SLOT_CONFLICT");
+      throw new Error(`Supabase upsert failed: ${error.message}`);
+    }
   } else {
+    // メモリモードでも1スロット1件を保証する
+    for (const existing of memory.values()) {
+      if (
+        existing.pickupDate === r.pickupDate &&
+        existing.pickupTimeSlot === r.pickupTimeSlot &&
+        existing.status !== "cancelled" &&
+        existing.bookingId !== r.bookingId
+      ) {
+        throw new Error("SLOT_CONFLICT");
+      }
+    }
     memory.set(r.bookingId, r);
   }
 }
@@ -312,4 +326,179 @@ export async function pingStorage(): Promise<{
 /** デモが Supabase を使っているか（管理画面の表示用） */
 export function storageMode(): "supabase" | "memory" {
   return supabaseConfigured() ? "supabase" : "memory";
+}
+
+// ============================================================
+// 週次パターン (weekly_patterns)
+// ============================================================
+
+export type WeeklyPattern = {
+  id: string;
+  dayOfWeek: number; // 0=日, 1=月, …, 6=土
+  timeSlot: "am" | "pm";
+  enabled: boolean;
+};
+
+type PatternRow = {
+  id: string;
+  demo_id: string;
+  day_of_week: number;
+  time_slot: "am" | "pm";
+  enabled: boolean;
+};
+
+function patternRowToModel(r: PatternRow): WeeklyPattern {
+  return { id: r.id, dayOfWeek: r.day_of_week, timeSlot: r.time_slot, enabled: r.enabled };
+}
+
+const patternMemory: Map<string, WeeklyPattern> =
+  (globalThis as { __rapportiaPatterns?: Map<string, WeeklyPattern> })
+    .__rapportiaPatterns ??
+  ((globalThis as { __rapportiaPatterns?: Map<string, WeeklyPattern> })
+    .__rapportiaPatterns = new Map());
+
+export async function getWeeklyPatterns(): Promise<WeeklyPattern[]> {
+  if (supabaseConfigured()) {
+    const { data, error } = await sb()
+      .from("weekly_patterns")
+      .select("*")
+      .eq("demo_id", DEMO_ID)
+      .order("day_of_week")
+      .order("time_slot");
+    if (error) throw new Error(`Supabase getWeeklyPatterns failed: ${error.message}`);
+    return ((data as PatternRow[] | null) ?? []).map(patternRowToModel);
+  }
+  return Array.from(patternMemory.values()).sort(
+    (a, b) => a.dayOfWeek - b.dayOfWeek || a.timeSlot.localeCompare(b.timeSlot)
+  );
+}
+
+export async function setWeeklyPatterns(
+  patterns: { dayOfWeek: number; timeSlot: "am" | "pm"; enabled: boolean }[]
+): Promise<void> {
+  if (supabaseConfigured()) {
+    const { error: delErr } = await sb()
+      .from("weekly_patterns")
+      .delete()
+      .eq("demo_id", DEMO_ID);
+    if (delErr) throw new Error(`Supabase deletePatterns failed: ${delErr.message}`);
+    if (patterns.length > 0) {
+      const rows = patterns.map((p) => ({
+        demo_id: DEMO_ID,
+        day_of_week: p.dayOfWeek,
+        time_slot: p.timeSlot,
+        enabled: p.enabled,
+      }));
+      const { error } = await sb().from("weekly_patterns").insert(rows);
+      if (error) throw new Error(`Supabase insertPatterns failed: ${error.message}`);
+    }
+    return;
+  }
+  patternMemory.clear();
+  for (const p of patterns) {
+    const id = `${p.dayOfWeek}-${p.timeSlot}`;
+    patternMemory.set(id, { id, ...p });
+  }
+}
+
+// ============================================================
+// 日付単位の例外 (slot_overrides)
+// ============================================================
+
+export type SlotOverride = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  timeSlot: "am" | "pm";
+  enabled: boolean; // true=臨時追加, false=その日休み
+};
+
+type OverrideRow = {
+  id: string;
+  demo_id: string;
+  date: string;
+  time_slot: "am" | "pm";
+  enabled: boolean;
+};
+
+function overrideRowToModel(r: OverrideRow): SlotOverride {
+  return { id: r.id, date: r.date, timeSlot: r.time_slot, enabled: r.enabled };
+}
+
+const overrideMemory: Map<string, SlotOverride> =
+  (globalThis as { __rapportiaOverrides?: Map<string, SlotOverride> })
+    .__rapportiaOverrides ??
+  ((globalThis as { __rapportiaOverrides?: Map<string, SlotOverride> })
+    .__rapportiaOverrides = new Map());
+
+export async function getSlotOverrides(
+  fromDate: string,
+  toDate: string
+): Promise<SlotOverride[]> {
+  if (supabaseConfigured()) {
+    const { data, error } = await sb()
+      .from("slot_overrides")
+      .select("*")
+      .eq("demo_id", DEMO_ID)
+      .gte("date", fromDate)
+      .lte("date", toDate)
+      .order("date")
+      .order("time_slot");
+    if (error) throw new Error(`Supabase getSlotOverrides failed: ${error.message}`);
+    return ((data as OverrideRow[] | null) ?? []).map(overrideRowToModel);
+  }
+  return Array.from(overrideMemory.values())
+    .filter((o) => o.date >= fromDate && o.date <= toDate)
+    .sort((a, b) => a.date.localeCompare(b.date) || a.timeSlot.localeCompare(b.timeSlot));
+}
+
+export async function getAllSlotOverrides(): Promise<SlotOverride[]> {
+  if (supabaseConfigured()) {
+    const { data, error } = await sb()
+      .from("slot_overrides")
+      .select("*")
+      .eq("demo_id", DEMO_ID)
+      .order("date")
+      .order("time_slot");
+    if (error) throw new Error(`Supabase getAllSlotOverrides failed: ${error.message}`);
+    return ((data as OverrideRow[] | null) ?? []).map(overrideRowToModel);
+  }
+  return Array.from(overrideMemory.values()).sort(
+    (a, b) => a.date.localeCompare(b.date) || a.timeSlot.localeCompare(b.timeSlot)
+  );
+}
+
+export async function upsertSlotOverride(
+  date: string,
+  timeSlot: "am" | "pm",
+  enabled: boolean
+): Promise<SlotOverride> {
+  if (supabaseConfigured()) {
+    const { data, error } = await sb()
+      .from("slot_overrides")
+      .upsert(
+        { demo_id: DEMO_ID, date, time_slot: timeSlot, enabled },
+        { onConflict: "demo_id,date,time_slot" }
+      )
+      .select()
+      .single();
+    if (error) throw new Error(`Supabase upsertSlotOverride failed: ${error.message}`);
+    return overrideRowToModel(data as OverrideRow);
+  }
+  const id = `${date}-${timeSlot}`;
+  const override: SlotOverride = { id, date, timeSlot, enabled };
+  overrideMemory.set(id, override);
+  return override;
+}
+
+export async function deleteSlotOverride(id: string): Promise<void> {
+  if (supabaseConfigured()) {
+    const { error } = await sb()
+      .from("slot_overrides")
+      .delete()
+      .eq("demo_id", DEMO_ID)
+      .eq("id", id);
+    if (error) throw new Error(`Supabase deleteSlotOverride failed: ${error.message}`);
+    return;
+  }
+  overrideMemory.delete(id);
 }

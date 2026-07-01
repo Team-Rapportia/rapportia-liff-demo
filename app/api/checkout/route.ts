@@ -77,7 +77,13 @@ export async function POST(req: Request) {
       source,
     });
     bookingId = result.bookingId;
-  } catch {
+  } catch (e) {
+    if (e instanceof Error && e.message === "SLOT_CONFLICT") {
+      return NextResponse.json(
+        { error: "この日時はすでに予約が入っています。別の日時をお選びください。" },
+        { status: 409 }
+      );
+    }
     return NextResponse.json(
       { error: "ご予約の受付に失敗しました。時間を置いて再度お試しください。" },
       { status: 502 }

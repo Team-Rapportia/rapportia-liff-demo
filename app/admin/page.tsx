@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { isAdminAuthed } from "@/lib/admin-auth";
 import { listReservations, storageMode } from "@/lib/store";
 import { AdminReservationList } from "@/components/AdminReservationList";
+import { AdminSlotManager } from "@/components/AdminSlotManager";
 
 export const dynamic = "force-dynamic";
 
@@ -17,9 +18,14 @@ export default async function AdminPage() {
 
   const reservations = await listReservations();
   return (
-    <AdminReservationList
-      reservations={reservations}
-      storage={storageMode()}
-    />
+    <>
+      <div className="max-w-md mx-auto px-4 pt-5">
+        <AdminSlotManager />
+      </div>
+      <AdminReservationList
+        reservations={reservations}
+        storage={storageMode()}
+      />
+    </>
   );
 }

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Product } from "@/lib/products";
 import { extractCampaign } from "@/lib/campaign";
+import { SlotPicker } from "./SlotPicker";
+import type { AvailableSlot, SlotValue } from "./SlotPicker";
 
 type Props = {
   products: Product[];
@@ -10,35 +12,41 @@ type Props = {
   defaultName: string;
 };
 
+// ケーキ注文は仕込みが要るため、受付は今日から3日後以降
+const LEAD_DAYS = 3;
+
 export function ReservationForm({ products, liffIdToken, defaultName }: Props) {
   const [productId, setProductId] = useState(products[0]?.id ?? "");
   const [quantity, setQuantity] = useState(1);
-  const [pickupDate, setPickupDate] = useState("");
-  const [pickupTimeSlot, setPickupTimeSlot] = useState<"am" | "pm">("am");
+  const [selectedSlot, setSelectedSlot] = useState<SlotValue | null>(null);
   const [customerName, setCustomerName] = useState(defaultName);
   const [customerNote, setCustomerNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [attempted, setAttempted] = useState(false);
 
+  const [slots, setSlots] = useState<AvailableSlot[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/slots")
+      .then((r) => r.json())
+      .then((data) => setSlots(data.slots ?? []))
+      .catch(() => setSlots([]))
+      .finally(() => setSlotsLoading(false));
+  }, []);
+
   // 必須項目のエラー判定（送信を試みたあとに有効化）
-  const dateError = attempted && !pickupDate;
+  const slotError = attempted && !selectedSlot;
   const nameError = attempted && !customerName;
 
   const selected = products.find((p) => p.id === productId);
-
-  // 最短お受取日：当日から 3 日後
-  const minDate = (() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 3);
-    return d.toISOString().slice(0, 10);
-  })();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setAttempted(true);
 
-    if (!pickupDate || !customerName) {
+    if (!selectedSlot || !customerName) {
       setError("赤枠の項目を入力してください。");
       return;
     }
@@ -59,8 +67,8 @@ export function ReservationForm({ products, liffIdToken, defaultName }: Props) {
         body: JSON.stringify({
           productId,
           quantity,
-          pickupDate,
-          pickupTimeSlot,
+          pickupDate: selectedSlot.date,
+          pickupTimeSlot: selectedSlot.timeSlot,
           customerName,
           customerNote,
           liffIdToken,
@@ -138,44 +146,30 @@ export function ReservationForm({ products, liffIdToken, defaultName }: Props) {
       </section>
 
       <section>
-        <label htmlFor="pickup-date" className="block text-sm font-medium mb-2">
-          お受取日（3日以上先）
-          {dateError && <span className="text-accent ml-2 text-xs">※ 必須項目です</span>}
+        <label className="block text-sm font-medium mb-2">
+          お受取日時（3日以上先）
+          {slotError && (
+            <span className="text-accent ml-2 text-xs">※ 日時を選択してください</span>
+          )}
         </label>
-        <input
-          id="pickup-date"
-          type="date"
-          required
-          min={minDate}
-          value={pickupDate}
-          onChange={(e) => setPickupDate(e.target.value)}
-          aria-invalid={dateError}
-          className={`w-full border rounded-lg p-3 transition ${
-            dateError
-              ? "border-accent border-2 bg-red-50"
-              : "border-gray-300"
-          }`}
-        />
-      </section>
-
-      <section>
-        <label className="block text-sm font-medium mb-2">お受取時間帯</label>
-        <div className="grid grid-cols-2 gap-2">
-          {(["am", "pm"] as const).map((slot) => (
-            <button
-              type="button"
-              key={slot}
-              onClick={() => setPickupTimeSlot(slot)}
-              className={`p-3 rounded-lg border transition ${
-                pickupTimeSlot === slot
-                  ? "bg-primary text-white border-primary"
-                  : "bg-white border-gray-300"
-              }`}
-            >
-              {slot === "am" ? "午前 10:00 - 12:00" : "午後 15:00 - 18:00"}
-            </button>
-          ))}
-        </div>
+        {slotsLoading ? (
+          <p className="text-sm text-gray-400 py-6 text-center">
+            空き状況を確認中...
+          </p>
+        ) : (
+          <div
+            className={`rounded-xl border p-3 transition ${
+              slotError ? "border-accent border-2 bg-red-50" : "border-gray-200"
+            }`}
+          >
+            <SlotPicker
+              slots={slots}
+              value={selectedSlot}
+              onSelect={setSelectedSlot}
+              leadDays={LEAD_DAYS}
+            />
+          </div>
+        )}
       </section>
 
       <section>
