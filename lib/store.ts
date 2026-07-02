@@ -359,14 +359,16 @@ const patternMemory: Map<string, WeeklyPattern> =
 
 export async function getWeeklyPatterns(): Promise<WeeklyPattern[]> {
   if (supabaseConfigured()) {
+    // 注意: .eq() の後に .order() を2回チェーンすると supabase-js が
+    // 0件を返す既知の不具合があるため、order は付けずソートはJS側で行う。
     const { data, error } = await sb()
       .from("weekly_patterns")
       .select("*")
-      .eq("demo_id", DEMO_ID)
-      .order("day_of_week")
-      .order("time_slot");
+      .eq("demo_id", DEMO_ID);
     if (error) throw new Error(`Supabase getWeeklyPatterns failed: ${error.message}`);
-    return ((data as PatternRow[] | null) ?? []).map(patternRowToModel);
+    return ((data as PatternRow[] | null) ?? [])
+      .map(patternRowToModel)
+      .sort((a, b) => a.dayOfWeek - b.dayOfWeek || a.timeSlot.localeCompare(b.timeSlot));
   }
   return Array.from(patternMemory.values()).sort(
     (a, b) => a.dayOfWeek - b.dayOfWeek || a.timeSlot.localeCompare(b.timeSlot)
@@ -435,16 +437,18 @@ export async function getSlotOverrides(
   toDate: string
 ): Promise<SlotOverride[]> {
   if (supabaseConfigured()) {
+    // 注意: .eq() の後に .order() を2回チェーンすると supabase-js が
+    // 0件を返す既知の不具合があるため、order は付けずソートはJS側で行う。
     const { data, error } = await sb()
       .from("slot_overrides")
       .select("*")
       .eq("demo_id", DEMO_ID)
       .gte("date", fromDate)
-      .lte("date", toDate)
-      .order("date")
-      .order("time_slot");
+      .lte("date", toDate);
     if (error) throw new Error(`Supabase getSlotOverrides failed: ${error.message}`);
-    return ((data as OverrideRow[] | null) ?? []).map(overrideRowToModel);
+    return ((data as OverrideRow[] | null) ?? [])
+      .map(overrideRowToModel)
+      .sort((a, b) => a.date.localeCompare(b.date) || a.timeSlot.localeCompare(b.timeSlot));
   }
   return Array.from(overrideMemory.values())
     .filter((o) => o.date >= fromDate && o.date <= toDate)
@@ -453,14 +457,16 @@ export async function getSlotOverrides(
 
 export async function getAllSlotOverrides(): Promise<SlotOverride[]> {
   if (supabaseConfigured()) {
+    // 注意: .eq() の後に .order() を2回チェーンすると supabase-js が
+    // 0件を返す既知の不具合があるため、order は付けずソートはJS側で行う。
     const { data, error } = await sb()
       .from("slot_overrides")
       .select("*")
-      .eq("demo_id", DEMO_ID)
-      .order("date")
-      .order("time_slot");
+      .eq("demo_id", DEMO_ID);
     if (error) throw new Error(`Supabase getAllSlotOverrides failed: ${error.message}`);
-    return ((data as OverrideRow[] | null) ?? []).map(overrideRowToModel);
+    return ((data as OverrideRow[] | null) ?? [])
+      .map(overrideRowToModel)
+      .sort((a, b) => a.date.localeCompare(b.date) || a.timeSlot.localeCompare(b.timeSlot));
   }
   return Array.from(overrideMemory.values()).sort(
     (a, b) => a.date.localeCompare(b.date) || a.timeSlot.localeCompare(b.timeSlot)
