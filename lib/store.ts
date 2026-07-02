@@ -58,7 +58,15 @@ function sb(): SupabaseClient {
     _client = createClient(
       process.env.SUPABASE_URL as string,
       process.env.SUPABASE_SERVICE_ROLE_KEY as string,
-      { auth: { persistSession: false, autoRefreshToken: false } }
+      {
+        auth: { persistSession: false, autoRefreshToken: false },
+        // Next.js App Router はグローバル fetch を自動キャッシュするため、
+        // supabase-js 内部の fetch も明示的に no-store にしないと
+        // 古いレスポンス（予約・枠設定の変更前の状態）を返し続けることがある。
+        global: {
+          fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }),
+        },
+      }
     );
   }
   return _client;
