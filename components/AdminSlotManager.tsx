@@ -116,8 +116,9 @@ export function AdminSlotManager() {
     <section>
       <h2 className="text-base font-bold mb-3">予約枠の設定</h2>
 
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-1 items-start">
       {/* 週次パターン */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-3">
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
         <h3 className="text-sm font-semibold mb-3 text-gray-700">
           週次パターン
         </h3>
@@ -253,6 +254,7 @@ export function AdminSlotManager() {
             ))}
           </ul>
         )}
+      </div>
       </div>
     </section>
   );

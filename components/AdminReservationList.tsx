@@ -80,13 +80,13 @@ export function AdminReservationList({ reservations, storage }: Props) {
   ];
 
   return (
-    <main className="max-w-md mx-auto px-4 py-5 min-h-screen bg-bg">
+    <div>
       <header className="flex items-center justify-between mb-1">
         <div>
           <p className="font-heading text-primary-dark text-base leading-none">
             Reservations
           </p>
-          <h1 className="text-lg font-bold mt-1">予約管理</h1>
+          <h2 className="text-base md:text-lg font-bold mt-1">予約一覧</h2>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -151,7 +151,7 @@ export function AdminReservationList({ reservations, storage }: Props) {
           )}
         </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="grid gap-3 md:grid-cols-2 items-start">
           {shown.map((r) => (
             <ReservationCard key={r.bookingId} r={r} />
           ))}
@@ -161,7 +161,7 @@ export function AdminReservationList({ reservations, storage }: Props) {
       <p className="text-center text-xs text-gray-400 mt-10 pb-6">
         Team Rapportia デモ予約管理
       </p>
-    </main>
+    </div>
   );
 }
 
