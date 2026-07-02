@@ -82,3 +82,31 @@ export async function getAvailableSlots(
 
   return Array.from(byDate.entries()).map(([date, timeSlots]) => ({ date, timeSlots }));
 }
+
+/**
+ * 指定の日時が「現在」開いているか（週次パターン→例外オーバーライドの順で判定）。
+ * 既存予約の有無はここでは見ない（それは saveReservation のユニーク制約で担保する）。
+ *
+ * 用途: checkout 確定の直前に呼び、「画面表示後に店主が枠を閉じた」ケースで
+ * 古い画面のまま送信されても弾けるようにする（表示のキャッシュに関わらず常に最新DBを見る）。
+ */
+export async function isSlotOpen(
+  date: string,
+  timeSlot: "am" | "pm"
+): Promise<boolean> {
+  const [patterns, overrides] = await Promise.all([
+    getWeeklyPatterns(),
+    getSlotOverrides(date, date),
+  ]);
+
+  const override = overrides.find(
+    (o) => o.date === date && o.timeSlot === timeSlot
+  );
+  if (override) return override.enabled;
+
+  const dow = dayOfWeek(date);
+  const pattern = patterns.find(
+    (p) => p.dayOfWeek === dow && p.timeSlot === timeSlot
+  );
+  return pattern?.enabled ?? false;
+}

@@ -6,6 +6,7 @@ import { getStripe } from "@/lib/stripe";
 import { findProduct } from "@/lib/products";
 import { sanitizeSource } from "@/lib/campaign";
 import { serverEnv } from "@/lib/env";
+import { isSlotOpen } from "@/lib/slots";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -58,6 +59,19 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { error: "お受取日はご予約日の3日以上先をご指定ください。" },
       { status: 400 }
+    );
+  }
+
+  // 3.5 枠の開閉を今この瞬間のDBで再検証する。
+  //     画面表示後に店主が枠を閉じた場合でも、古い画面のまま送信されて
+  //     すり抜けないようにする（表示のキャッシュに関わらず常に最新を見る）。
+  const slotOpen = await isSlotOpen(input.pickupDate, input.pickupTimeSlot).catch(
+    () => true // 判定自体に失敗した場合はブロックしない（既存の重複防止に委ねる）
+  );
+  if (!slotOpen) {
+    return NextResponse.json(
+      { error: "この日時は受付を終了しました。お手数ですが別の日時をお選びください。" },
+      { status: 409 }
     );
   }
 
