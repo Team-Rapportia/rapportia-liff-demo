@@ -42,7 +42,7 @@ export function LiffGate({ liffId, products }: Props) {
         step = "isLoggedIn";
         if (!liff.isLoggedIn()) {
           step = "login";
-          liff.login();
+          liff.login({ redirectUri: window.location.href });
           return;
         }
 

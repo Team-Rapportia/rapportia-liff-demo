@@ -34,7 +34,9 @@ export default function AdminLoginPage() {
         step = "isLoggedIn";
         if (!liff.isLoggedIn()) {
           step = "login";
-          liff.login();
+          // redirectUri を明示しないと、LIFFのエンドポイントURL（顧客ページ "/"）に
+          // 戻されてしまうことがある（/admin/login に戻ってこない不具合の原因）。
+          liff.login({ redirectUri: window.location.href });
           return;
         }
 
