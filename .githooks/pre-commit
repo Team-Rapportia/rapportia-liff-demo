@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Gitleaks pre-commit フック
+#
+# ステージされた変更に秘密情報（APIキー・パスワード・トークン等）が
+# 含まれていないかをコミット前に検査する。プライベートリポでも
+# git履歴は削除コミットでは消えず `git log -p` で読めてしまうため、
+# 「入れない」ための最後の砦として置く。
+set -eo pipefail
+
+find_gitleaks() {
+	if command -v gitleaks >/dev/null 2>&1; then
+		echo "gitleaks"
+		return
+	fi
+	local winget_dir="/c/Users/${USERNAME:-$USER}/AppData/Local/Microsoft/WinGet/Packages"
+	local found
+	found="$(find "$winget_dir" -maxdepth 2 -iname 'gitleaks.exe' 2>/dev/null | head -1)"
+	echo "$found"
+}
+
+GITLEAKS_BIN="$(find_gitleaks)"
+
+if [ -z "$GITLEAKS_BIN" ]; then
+	echo "⚠️  gitleaks が見つからないため、秘密情報チェックをスキップしました。"
+	echo "    インストール: winget install --id Gitleaks.Gitleaks"
+	exit 0
+fi
+
+if ! "$GITLEAKS_BIN" protect --staged --redact -v; then
+	echo ""
+	echo "🛑 コミットを中止しました。上記の箇所に秘密情報が含まれている可能性があります。"
+	echo "   誤検知の場合は .gitleaksignore に該当行のfingerprintを追加してください。"
+	exit 1
+fi
