@@ -4,7 +4,7 @@
 
 > ⚠️ **このリポジトリは凍結デモです**。新機能・バグ修正は本番テンプレ [`rapportia-liff`](https://github.com/Team-Rapportia/rapportia-liff) で行います。
 >
-> このリポは「商談で動くものを見せる」目的のみ。Amelia (有料プラグイン) を使わず、**Supabase（無ければメモリ）** に予約を保存して Stripe 決済までの導線と店主管理画面を動かします（予約バックエンドは [Supabase に完全移行決定](https://github.com/Team-Rapportia/team-rapportia/blob/main/strategy/13_予約バックエンドの選定（Supabase決定）.md)）。
+> このリポは「商談で動くものを見せる」目的のみ。Amelia (有料プラグイン) を使わず、**Supabase（無ければメモリ）** に予約を保存して Stripe 決済までの導線と店主管理画面を動かします（予約バックエンドは [Supabase に完全移行決定](https://github.com/Team-Rapportia/rapportia-hq/blob/main/strategy/_frozen-b2c/13_予約バックエンドの選定（Supabase決定）.md)）。
 
 ---
 
@@ -20,7 +20,7 @@
   見せる時だけ Vercel に `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` を設定（👤 1回）
 - スキーマは `supabase/migrations/0001_init_reservations.sql`、ダミー投入は `scripts/seed-supabase.ps1`
 - 無料プロジェクトは 7 日無アクセスで pause するため、`/api/keep-alive` を日次 cron（`vercel.json`）で起こし続ける
-- 設計判断の詳細: [strategy/11_予約管理と店主ダッシュボード.md](https://github.com/Team-Rapportia/team-rapportia/blob/main/strategy/11_予約管理と店主ダッシュボード.md) / [strategy/13_予約バックエンドの選定（Supabase決定）.md](https://github.com/Team-Rapportia/team-rapportia/blob/main/strategy/13_予約バックエンドの選定（Supabase決定）.md)
+- 設計判断の詳細: [strategy/_frozen-b2c/11_予約管理と店主ダッシュボード.md](https://github.com/Team-Rapportia/rapportia-hq/blob/main/strategy/_frozen-b2c/11_予約管理と店主ダッシュボード.md) / [strategy/_frozen-b2c/13_予約バックエンドの選定（Supabase決定）.md](https://github.com/Team-Rapportia/rapportia-hq/blob/main/strategy/_frozen-b2c/13_予約バックエンドの選定（Supabase決定）.md)
 
 > なぜ Amelia 風テーブルにしないか: wp-admin 風の複雑な画面はペルソナのペイン C-14（管理画面が
 > 複雑で諦めた）そのもの。当社の強み（簡単・LINE・脱HotPepper）と逆の印象を与えるため、

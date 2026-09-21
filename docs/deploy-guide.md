@@ -1,6 +1,6 @@
 # デプロイ手順（Step 2〜5）
 
-> ⚠️ **2026-06-01 更新**: このデモ（`rapportia-liff-demo`）の予約保存先は **Supabase（無ければメモリ）** に変更済み（[Supabase 完全移行決定](https://github.com/Team-Rapportia/team-rapportia/blob/main/strategy/13_予約バックエンドの選定（Supabase決定）.md)）。本ガイドの **Step 4「ConoHa WING + Amelia」は本番テンプレ `rapportia-liff` 用**で、デモのデプロイには不要（読み飛ばし可）。Supabase の設定は README とマイグレーション（`supabase/migrations/`）を参照。
+> ⚠️ **2026-06-01 更新**: このデモ（`rapportia-liff-demo`）の予約保存先は **Supabase（無ければメモリ）** に変更済み（[Supabase 完全移行決定](https://github.com/Team-Rapportia/rapportia-hq/blob/main/strategy/_frozen-b2c/13_予約バックエンドの選定（Supabase決定）.md)）。本ガイドの **Step 4「ConoHa WING + Amelia」は本番テンプレ `rapportia-liff` 用**で、デモのデプロイには不要（読み飛ばし可）。Supabase の設定は README とマイグレーション（`supabase/migrations/`）を参照。
 
 `npm install` が終わった後にやる、各外部サービスのセットアップ手順。
 **LINE → Stripe → Amelia → Vercel** の順で進めるのが最短。
@@ -131,7 +131,7 @@
    - Pro 版: `https://<your-wp>/wp-json/amelia/v2`
    - **メモ → `AMELIA_API_BASE`**
 
-> ⚠️ Amelia 無料版は REST API が制限されている場合あり。**Standard プラン以上で Pro 版前提** が現実的（[strategy/04_プラン別の違い.md](https://github.com/Team-Rapportia/team-rapportia/blob/main/strategy/04_プラン別の違い.md)）。
+> ⚠️ Amelia 無料版は REST API が制限されている場合あり。**Standard プラン以上で Pro 版前提** が現実的（[strategy/_frozen-b2c/04_プラン別の違い.md](https://github.com/Team-Rapportia/rapportia-hq/blob/main/strategy/_frozen-b2c/04_プラン別の違い.md)）。
 
 ---
 
