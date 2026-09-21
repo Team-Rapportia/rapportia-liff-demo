@@ -109,7 +109,7 @@ http://localhost:3000
 
 ## 関連
 
-- [team-rapportia](https://github.com/Team-Rapportia/team-rapportia) — 本部・戦略文書
+- [rapportia-hq](https://github.com/Team-Rapportia/rapportia-hq) — 本部・戦略文書
 - [rapportia-liff](https://github.com/Team-Rapportia/rapportia-liff) — 🟢 本番テンプレ
 - [rapportia-base-theme](https://github.com/Team-Rapportia/rapportia-base-theme) — WP 親テーマ
 - [demo-cake](https://github.com/Team-Rapportia/demo-cake) — デモケーキ店 WP テーマ
